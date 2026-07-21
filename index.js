@@ -1,5 +1,5 @@
 // ============================================================
-// AccountGen - Discord Account Generator Bot (FIXED INTENTS)
+// AccountGen - Discord Account Generator Bot (FIXED - NO DUPLICATES)
 // ============================================================
 // Requirements: npm install discord.js
 // ============================================================
@@ -44,6 +44,7 @@ const SERVICES = [
 
 const cooldowns = new Map();
 const timedOutUsers = new Set();
+const processedMessages = new Set(); // ─── DEDUPLICATION ───
 
 const client = new Client({
   intents: [
@@ -51,7 +52,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
-    // ─── GuildMembers REMOVED to fix error ───
   ],
 });
 
@@ -61,6 +61,11 @@ client.once("ready", () => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+
+  // ─── DEDUPLICATION GUARD ───
+  if (processedMessages.has(message.id)) return;
+  processedMessages.add(message.id);
+  setTimeout(() => processedMessages.delete(message.id), 5000);
 
   const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
   const command = args.shift()?.toLowerCase();
