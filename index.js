@@ -23,7 +23,7 @@ const OWNER_ID = "1399683999659593789";
 const CHANNEL_RESTRICTIONS = {
   "bgen": "1501651225710559477",
   "gen": "1501668467407851612",
-  "vouch": "1501668467407851612",1501651225710559477",
+  "vouch": "1502123594829004953",
   "restock": "1501688358668075172",
   "bstock": "1501688358668075172",
   "fstock": "1501688358668075172",
@@ -44,8 +44,8 @@ const SERVICES = [
   { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", stock: [] },
   { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", stock: [] },
   { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", stock: [] },
-  { id: 11, name: "Netflix", emoji: "🇳", category: "free", stock: [] },
-  { id: 12, name: "Netflix Tv", emoji: "🇳", category: "free", stock: [] }
+  { id: 11, name: "HBO Max", emoji: "📺", category: "free", stock: [] },
+  { id: 12, name: "Deezer", emoji: "🎶", category: "free", stock: [] }
 ];
 
 const cooldowns = new Map();
@@ -59,7 +59,6 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildMembers,
   ],
 });
 
@@ -86,7 +85,6 @@ client.on("messageCreate", async (message) => {
 
   // ─── removecooldown <user> ───
   if (command === "removecooldown") {
-    // Check if the command user is the owner
     if (message.author.id !== OWNER_ID) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
@@ -101,24 +99,21 @@ client.on("messageCreate", async (message) => {
       return message.reply(`Usage: ${PREFIX}removecooldown <@user or userID>\nExample: ${PREFIX}removecooldown @sainttt15`);
     }
 
-    // Extract user ID from mention or use as-is
     let userId = target;
     const mentionMatch = target.match(/^<@!?(\d+)>$/);
     if (mentionMatch) {
       userId = mentionMatch[1];
     }
 
-    // Check if user has any cooldowns
     let removedCount = 0;
     const keysToRemove = [];
-    for (const [key, value] of cooldowns) {
+    for (const [key] of cooldowns) {
       if (key.startsWith(`${userId}:`)) {
         keysToRemove.push(key);
         removedCount++;
       }
     }
 
-    // Remove all cooldowns for that user
     for (const key of keysToRemove) {
       cooldowns.delete(key);
     }
