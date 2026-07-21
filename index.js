@@ -38,8 +38,8 @@ const SERVICES = [
   { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", stock: [] },
   { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", stock: [] },
   { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", stock: [] },
-  { id: 11, name: "HBO Max", emoji: "📺", category: "free", stock: [] },
-  { id: 12, name: "Deezer", emoji: "🎶", category: "free", stock: [] }
+  { id: 11, name: "Netflix", emoji: "📺", category: "free", stock: [] },
+  { id: 12, name: "Netflix Tv", emoji: "🎶", category: "free", stock: [] }
 ];
 
 const cooldowns = new Map();
