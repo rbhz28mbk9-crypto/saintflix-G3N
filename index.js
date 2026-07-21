@@ -27,7 +27,7 @@ const CHANNEL_RESTRICTIONS = {
   "restock": "1501688358668075172",
   "bstock": "1501688358668075172",
   "fstock": "1501688358668075172",
-  "removecooldown": "1501688358668075172"
+  "removecooldown": ["1501651225710559477", "1501668467407851612"]
 };
 
 // ─────────────────────────────────────────
@@ -275,7 +275,7 @@ client.on("messageCreate", async (message) => {
       const dmEmbed = new EmbedBuilder()
         .setColor(0x2ecc71)
         .setTitle(`${service.emoji} ${service.name} Account`)
-        .setDescription(`\`\`\`${account}\`\`\``)
+        .setDescription(`\`\`\`\n${account}\n\`\`\``)
         .setFooter({ text: FOOTER_TEXT })
         .setTimestamp();
       await message.author.send({ embeds: [dmEmbed] });
