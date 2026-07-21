@@ -18,7 +18,7 @@ const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screensho
 const CHANNEL_RESTRICTIONS = {
   "bgen": "1501651225710559477",
   "gen": "1501668467407851612",
-  "vouch": "1502123594829004953",
+  "vouch": "1501668467407851612",1501651225710559477",
   "restock": "1501688358668075172",
   "bstock": "1501688358668075172",
   "fstock": "1501688358668075172"
