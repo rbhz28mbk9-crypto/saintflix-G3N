@@ -258,8 +258,8 @@ client.on("messageCreate", async (message) => {
     if (!account) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
-        .setTitle("❌ Out of Stock")
-        .setDescription(`**${service.emoji} ${service.name}** is out of stock. Use ${PREFIX}bstock or ${PREFIX}fstock to add more!`)
+        .setTitle(`❌ ${service.name} Out of Stock`)
+        .setDescription(`**${service.emoji} ${service.name}** is currently out of stock.`)
         .setFooter({ text: FOOTER_TEXT });
       return message.reply({ embeds: [embed] });
     }
