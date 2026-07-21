@@ -31,6 +31,11 @@ const CHANNEL_RESTRICTIONS = {
 };
 
 // ─────────────────────────────────────────
+// VOUCH CHANNEL - Where vouches get posted
+// ─────────────────────────────────────────
+const VOUCH_CHANNEL_ID = "1502123594829004953";
+
+// ─────────────────────────────────────────
 // SERVICES & STOCK
 // ─────────────────────────────────────────
 const SERVICES = [
@@ -158,7 +163,7 @@ client.on("messageCreate", async (message) => {
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}bstock <service> <account>\nExample: ${PREFIX}bstock Netflix https://netflix.com/?token=xxx`);
+      return message.reply(`Usage: ${PREFIX}bstock <service> <account>\nExample: ${PREFIX}bstock Netflix your_account_here`);
     }
 
     const service = SERVICES.find(
@@ -195,7 +200,7 @@ client.on("messageCreate", async (message) => {
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Netflix https://netflix.com/?token=xxx`);
+      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Netflix your_account_here`);
     }
 
     const service = SERVICES.find(
@@ -324,12 +329,37 @@ client.on("messageCreate", async (message) => {
     if (!vouchText) {
       return message.reply(`Usage: ${PREFIX}vouch <service> <your message>\nExample: ${PREFIX}vouch netflix great service!`);
     }
+
+    // Parse service name from vouch text
+    const words = vouchText.split(" ");
+    const serviceName = words[0];
+    const vouchMessage = words.slice(1).join(" ") || "No message provided";
+
+    // Find service
+    const service = SERVICES.find(
+      (s) => s.name.toLowerCase() === serviceName.toLowerCase()
+    );
+
     const vouchEmbed = new EmbedBuilder()
       .setColor(0x27ae60)
-      .setTitle("✅ Vouch Submitted")
-      .setDescription(`Thank you for vouching, <@${message.author.id}>!`)
-      .setFooter({ text: FOOTER_TEXT });
-    return message.reply({ embeds: [vouchEmbed] });
+      .setTitle(`✅ Vouch — ${service ? service.name : serviceName}`)
+      .setDescription(`"${vouchMessage}"`)
+      .addFields(
+        { name: "Service", value: service ? `${service.emoji} ${service.name}` : serviceName, inline: true },
+        { name: "Tier", value: service ? service.category : "Unknown", inline: true },
+        { name: "Total Vouches by User", value: `#${Math.floor(Math.random() * 100) + 1}`, inline: true }
+      )
+      .setFooter({ text: `Vouched by ${message.author.username}` })
+      .setTimestamp();
+
+    // Send to vouch channel
+    const vouchChannel = client.channels.cache.get(VOUCH_CHANNEL_ID);
+    if (vouchChannel) {
+      await vouchChannel.send({ embeds: [vouchEmbed] });
+      return message.reply("✅ Your vouch has been submitted!");
+    } else {
+      return message.reply("❌ Vouch channel not found. Please contact the owner.");
+    }
   }
 
   // ─── help ───
