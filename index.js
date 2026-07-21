@@ -20,25 +20,26 @@ const CHANNEL_RESTRICTIONS = {
   "gen": "1501668467407851612",
   "vouch": "1502123594829004953",
   "restock": "1501688358668075172",
-  "bstock": "1501688358668075172"  // bstock works in restock channel
+  "bstock": "1501688358668075172",
+  "fstock": "1501688358668075172"
 };
 
 // ─────────────────────────────────────────
 // SERVICES & STOCK
 // ─────────────────────────────────────────
 const SERVICES = [
-  { id: 1, name: "Netflix", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 2, name: "Netflix TV", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 3, name: "Crunchyroll", emoji: "🍊", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 4, name: "Prime Video", emoji: "🎬", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 5, name: "Disney+", emoji: "🏰", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 6, name: "Spotify", emoji: "🎵", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 7, name: "Steam", emoji: "🎮", category: "booster", cooldownMinutes: 120, stock: [] },
-  { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 11, name: "HBO Max", emoji: "📺", category: "free", cooldownMinutes: 30, stock: [] },
-  { id: 12, name: "Deezer", emoji: "🎶", category: "free", cooldownMinutes: 30, stock: [] }
+  { id: 1, name: "Netflix", emoji: "🇳", category: "booster", stock: [] },
+  { id: 2, name: "Netflix TV", emoji: "🇳", category: "booster", stock: [] },
+  { id: 3, name: "Crunchyroll", emoji: "🍊", category: "booster", stock: [] },
+  { id: 4, name: "Prime Video", emoji: "🎬", category: "booster", stock: [] },
+  { id: 5, name: "Disney+", emoji: "🏰", category: "booster", stock: [] },
+  { id: 6, name: "Spotify", emoji: "🎵", category: "booster", stock: [] },
+  { id: 7, name: "Steam", emoji: "🎮", category: "booster", stock: [] },
+  { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", stock: [] },
+  { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", stock: [] },
+  { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", stock: [] },
+  { id: 11, name: "HBO Max", emoji: "📺", category: "free", stock: [] },
+  { id: 12, name: "Deezer", emoji: "🎶", category: "free", stock: [] }
 ];
 
 const cooldowns = new Map();
@@ -76,13 +77,13 @@ client.on("messageCreate", async (message) => {
     return message.reply({ embeds: [embed] });
   }
 
-  // ─── bstock <service> <email:pass> ───
+  // ─── bstock <service> <account> ───
   if (command === "bstock") {
     const serviceName = args[0];
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}bstock <service> <email:password>\nExample: ${PREFIX}bstock Netflix user@gmail.com:pass123`);
+      return message.reply(`Usage: ${PREFIX}bstock <service> <account>\nExample: ${PREFIX}bstock Netflix https://netflix.com/?token=xxx`);
     }
 
     const service = SERVICES.find(
@@ -93,13 +94,40 @@ client.on("messageCreate", async (message) => {
       return message.reply(`❌ Service **${serviceName}** not found. Available: ${SERVICES.map(s => s.name).join(", ")}`);
     }
 
-    // Add account to stock
     service.stock.push(account);
     
     const embed = new EmbedBuilder()
       .setColor(0x2ecc71)
-      .setTitle("✅ Account Added to Stock")
-      .setDescription(`Added **${service.emoji} ${service.name}** account to stock.\nTotal: **${service.stock.length}** accounts`)
+      .setTitle("✅ Booster Account Added")
+      .setDescription(`Added **${service.emoji} ${service.name}** booster account.\nTotal: **${service.stock.length}** accounts`)
+      .setFooter({ text: FOOTER_TEXT });
+    
+    return message.reply({ embeds: [embed] });
+  }
+
+  // ─── fstock <service> <account> ───
+  if (command === "fstock") {
+    const serviceName = args[0];
+    const account = args.slice(1).join(" ");
+    
+    if (!serviceName || !account) {
+      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Spotify user@gmail.com:pass123`);
+    }
+
+    const service = SERVICES.find(
+      (s) => s.name.toLowerCase() === serviceName.toLowerCase()
+    );
+
+    if (!service) {
+      return message.reply(`❌ Service **${serviceName}** not found. Available: ${SERVICES.map(s => s.name).join(", ")}`);
+    }
+
+    service.stock.push(account);
+    
+    const embed = new EmbedBuilder()
+      .setColor(0x3498db)
+      .setTitle("✅ Free Account Added")
+      .setDescription(`Added **${service.emoji} ${service.name}** free account.\nTotal: **${service.stock.length}** accounts`)
       .setFooter({ text: FOOTER_TEXT });
     
     return message.reply({ embeds: [embed] });
@@ -129,7 +157,7 @@ client.on("messageCreate", async (message) => {
     const lastUsed = cooldowns.get(cdKey);
     if (lastUsed) {
       const elapsed = (Date.now() - lastUsed) / 1000 / 60;
-      const remaining = service.cooldownMinutes - elapsed;
+      const remaining = 60 - elapsed; // 60 minute cooldown
       if (remaining > 0) {
         const mins = Math.floor(remaining);
         const secs = Math.round((remaining - mins) * 60);
@@ -142,13 +170,12 @@ client.on("messageCreate", async (message) => {
       }
     }
 
-    // Get account from stock (removes it so no one else gets it)
     const account = service.stock.shift();
     if (!account) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
         .setTitle("❌ Out of Stock")
-        .setDescription(`**${service.emoji} ${service.name}** is currently out of stock. Use ${PREFIX}bstock to add more!`)
+        .setDescription(`**${service.emoji} ${service.name}** is out of stock. Use ${PREFIX}bstock or ${PREFIX}fstock to add more!`)
         .setFooter({ text: FOOTER_TEXT });
       return message.reply({ embeds: [embed] });
     }
@@ -164,7 +191,6 @@ client.on("messageCreate", async (message) => {
         .setTimestamp();
       await message.author.send({ embeds: [dmEmbed] });
     } catch {
-      // If DM fails, put account back in stock
       service.stock.unshift(account);
       return message.reply("❌ Could not DM you. Please enable DMs from server members.");
     }
@@ -201,7 +227,7 @@ client.on("messageCreate", async (message) => {
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
       .setTitle("📦 Account Stock")
-      .setDescription(description || "No services configured. Use .bstock to add accounts.")
+      .setDescription(description || "No accounts in stock. Use .bstock or .fstock to add.")
       .setFooter({ text: FOOTER_TEXT })
       .setTimestamp();
 
@@ -228,11 +254,12 @@ client.on("messageCreate", async (message) => {
       .setColor(0x5865f2)
       .setTitle(`${BOT_NAME} — Commands`)
       .addFields(
-        { name: `${PREFIX}bgen <service>`, value: "Generate an account for a service", inline: false },
+        { name: `${PREFIX}bgen <service>`, value: "Generate a booster account", inline: false },
         { name: `${PREFIX}gen <service>`, value: "Alias for bgen", inline: false },
-        { name: `${PREFIX}bstock <service> <email:pass>`, value: "Add an account to stock (removes when generated)", inline: false },
+        { name: `${PREFIX}bstock <service> <account>`, value: "Add booster account to stock", inline: false },
+        { name: `${PREFIX}fstock <service> <account>`, value: "Add free account to stock", inline: false },
         { name: `${PREFIX}restock`, value: "View current stock counts", inline: false },
-        { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch after receiving an account", inline: false },
+        { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch", inline: false },
         { name: `${PREFIX}help`, value: "Show this help message", inline: false }
       )
       .setFooter({ text: FOOTER_TEXT });
