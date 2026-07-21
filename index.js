@@ -163,7 +163,7 @@ client.on("messageCreate", async (message) => {
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}bstock <service> <account>\nExample: ${PREFIX}bstock Netflix your_account_here`);
+      return message.reply(`Usage: ${PREFIX}bstock <service> <account>\nExample: ${PREFIX}bstock Netflix account_here`);
     }
 
     const service = SERVICES.find(
@@ -200,7 +200,7 @@ client.on("messageCreate", async (message) => {
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Netflix your_account_here`);
+      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Netflix account_here`);
     }
 
     const service = SERVICES.find(
@@ -330,12 +330,10 @@ client.on("messageCreate", async (message) => {
       return message.reply(`Usage: ${PREFIX}vouch <service> <your message>\nExample: ${PREFIX}vouch netflix great service!`);
     }
 
-    // Parse service name from vouch text
     const words = vouchText.split(" ");
     const serviceName = words[0];
     const vouchMessage = words.slice(1).join(" ") || "No message provided";
 
-    // Find service
     const service = SERVICES.find(
       (s) => s.name.toLowerCase() === serviceName.toLowerCase()
     );
@@ -352,7 +350,6 @@ client.on("messageCreate", async (message) => {
       .setFooter({ text: `Vouched by ${message.author.username}` })
       .setTimestamp();
 
-    // Send to vouch channel
     const vouchChannel = client.channels.cache.get(VOUCH_CHANNEL_ID);
     if (vouchChannel) {
       await vouchChannel.send({ embeds: [vouchEmbed] });
