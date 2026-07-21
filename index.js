@@ -1,5 +1,5 @@
 // ============================================================
-// AccountGen - Discord Account Generator Bot
+// AccountGen - Discord Account Generator Bot (WITH TIMEOUT)
 // ============================================================
 // Requirements: npm install discord.js
 // ============================================================
@@ -13,7 +13,7 @@ const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
 // ─────────────────────────────────────────
-// OWNER ID - Only this user can use .bstock, .fstock, .removecooldown, .untimeout
+// OWNER ID
 // ─────────────────────────────────────────
 const OWNER_ID = "1399683999659593789";
 
@@ -31,14 +31,8 @@ const CHANNEL_RESTRICTIONS = {
   "untimeout": ["1501651225710559477", "1501668467407851612"]
 };
 
-// ─────────────────────────────────────────
-// VOUCH CHANNEL - Where vouches get posted
-// ─────────────────────────────────────────
 const VOUCH_CHANNEL_ID = "1502123594829004953";
 
-// ─────────────────────────────────────────
-// SERVICES & STOCK
-// ─────────────────────────────────────────
 const SERVICES = [
   { id: 1, name: "Netflix", emoji: "🇳", category: "booster", stock: [] },
   { id: 2, name: "Netflix TV", emoji: "🇳", category: "booster", stock: [] },
@@ -55,11 +49,9 @@ const SERVICES = [
 ];
 
 const cooldowns = new Map();
-const vouches = new Map(); // userId -> timestamp of last generation
+// ─── TIMEOUT SYSTEM ───
+const timedOutUsers = new Set(); // Stores user IDs that failed to vouch
 
-// ─────────────────────────────────────────
-// BOT SETUP
-// ─────────────────────────────────────────
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -80,7 +72,6 @@ client.on("messageCreate", async (message) => {
   const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
   const command = args.shift()?.toLowerCase();
 
-  // ─── CHANNEL RESTRICTION CHECK ───
   const allowedChannel = CHANNEL_RESTRICTIONS[command];
   if (allowedChannel) {
     let isAllowed = false;
@@ -112,7 +103,7 @@ client.on("messageCreate", async (message) => {
 
     const target = args[0];
     if (!target) {
-      return message.reply(`Usage: ${PREFIX}untimeout <@user or userID>\nExample: ${PREFIX}untimeout @sainttt15`);
+      return message.reply(`Usage: ${PREFIX}untimeout <@user or userID>\nExample: ${PREFIX}untimeout @user`);
     }
 
     let userId = target;
@@ -121,8 +112,8 @@ client.on("messageCreate", async (message) => {
       userId = mentionMatch[1];
     }
 
-    if (vouches.has(userId)) {
-      vouches.delete(userId);
+    if (timedOutUsers.has(userId)) {
+      timedOutUsers.delete(userId);
       const embed = new EmbedBuilder()
         .setColor(0x2ecc71)
         .setTitle("✅ Timeout Removed")
@@ -139,7 +130,7 @@ client.on("messageCreate", async (message) => {
     }
   }
 
-  // ─── removecooldown <user> ───
+  // ─── removecooldown ───
   if (command === "removecooldown") {
     if (message.author.id !== OWNER_ID) {
       const embed = new EmbedBuilder()
@@ -152,7 +143,7 @@ client.on("messageCreate", async (message) => {
 
     const target = args[0];
     if (!target) {
-      return message.reply(`Usage: ${PREFIX}removecooldown <@user or userID>\nExample: ${PREFIX}removecooldown @sainttt15`);
+      return message.reply(`Usage: ${PREFIX}removecooldown <@user or userID>\nExample: ${PREFIX}removecooldown @user`);
     }
 
     let userId = target;
@@ -191,7 +182,7 @@ client.on("messageCreate", async (message) => {
     return message.reply({ embeds: [embed] });
   }
 
-  // ─── bstock <service> <account> ───
+  // ─── bstock ───
   if (command === "bstock") {
     if (message.author.id !== OWNER_ID) {
       const embed = new EmbedBuilder()
@@ -219,7 +210,7 @@ client.on("messageCreate", async (message) => {
     );
 
     if (!service) {
-      return message.reply(`❌ Booster service **${serviceName}** not found. Available booster services: ${SERVICES.filter(s => s.category === "booster").map(s => s.name).join(", ")}`);
+      return message.reply(`❌ Booster service **${serviceName}** not found.`);
     }
 
     service.stock.push(account);
@@ -233,7 +224,7 @@ client.on("messageCreate", async (message) => {
     return message.reply({ embeds: [embed] });
   }
 
-  // ─── fstock <service> <account> ───
+  // ─── fstock ───
   if (command === "fstock") {
     if (message.author.id !== OWNER_ID) {
       const embed = new EmbedBuilder()
@@ -261,7 +252,7 @@ client.on("messageCreate", async (message) => {
     );
 
     if (!service) {
-      return message.reply(`❌ Free service **${serviceName}** not found. Available free services: ${SERVICES.filter(s => s.category === "free").map(s => s.name).join(", ")}`);
+      return message.reply(`❌ Free service **${serviceName}** not found.`);
     }
 
     service.stock.push(account);
@@ -275,14 +266,14 @@ client.on("messageCreate", async (message) => {
     return message.reply({ embeds: [embed] });
   }
 
-  // ─── bgen OR gen <service> ───
+  // ─── bgen / gen ───
   if (command === "bgen" || command === "gen") {
-    // Check if user is timed out (has not vouched)
-    if (vouches.has(message.author.id)) {
+    // ─── CHECK TIMEOUT ───
+    if (timedOutUsers.has(message.author.id)) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
         .setTitle("⛔ You are Timed Out")
-        .setDescription(`You did not vouch within **${VOUCH_TIMEOUT_MINUTES} minutes** of your last generation.\nPlease wait or contact an admin to use .untimeout @user`)
+        .setDescription(`You did not vouch within **${VOUCH_TIMEOUT_MINUTES} minutes** of your last generation.\nPlease contact an admin to use .untimeout @user`)
         .setFooter({ text: FOOTER_TEXT });
       return message.reply({ embeds: [embed] });
     }
@@ -333,7 +324,6 @@ client.on("messageCreate", async (message) => {
     }
 
     cooldowns.set(cdKey, Date.now());
-    vouches.set(message.author.id, Date.now()); // Mark user as needing to vouch
 
     try {
       const dmEmbed = new EmbedBuilder()
@@ -345,9 +335,16 @@ client.on("messageCreate", async (message) => {
       await message.author.send({ embeds: [dmEmbed] });
     } catch {
       service.stock.unshift(account);
-      vouches.delete(message.author.id);
       return message.reply("❌ Could not DM you. Please enable DMs from server members.");
     }
+
+    // ─── START VOUCH TIMER ───
+    // Remove any existing timeout for this user
+    timedOutUsers.delete(message.author.id);
+    // Set a 10-minute timeout
+    setTimeout(() => {
+      timedOutUsers.add(message.author.id);
+    }, VOUCH_TIMEOUT_MINUTES * 60 * 1000);
 
     const confirmEmbed = new EmbedBuilder()
       .setColor(0x2ecc71)
@@ -355,7 +352,7 @@ client.on("messageCreate", async (message) => {
       .setDescription(
         `<@${message.author.id}> Your **${service.emoji} ${service.name}** account has been sent to your DMs!\n\n` +
         `📝 **NOTES** ${VOUCH_MESSAGE}\n` +
-        `⚠️ **IMPORTANT:** You have **${VOUCH_TIMEOUT_MINUTES} minutes** to vouch or you'll be **timed out** from using .bgen/.gen!`
+        `⚠️ **IMPORTANT:** You have **${VOUCH_TIMEOUT_MINUTES} minutes** to vouch or you'll be **timed out**!`
       )
       .setFooter({ text: FOOTER_TEXT });
 
@@ -369,9 +366,9 @@ client.on("messageCreate", async (message) => {
       return message.reply(`Usage: ${PREFIX}vouch <service> <your message>\nExample: ${PREFIX}vouch netflix great service!`);
     }
 
-    // Remove timeout if user has one
-    if (vouches.has(message.author.id)) {
-      vouches.delete(message.author.id);
+    // ─── REMOVE TIMEOUT ON VOUCH ───
+    if (timedOutUsers.has(message.author.id)) {
+      timedOutUsers.delete(message.author.id);
     }
 
     const words = vouchText.split(" ");
@@ -422,7 +419,7 @@ client.on("messageCreate", async (message) => {
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
       .setTitle("📦 Account Stock")
-      .setDescription(description || "No accounts in stock. Use .bstock or .fstock to add.")
+      .setDescription(description || "No accounts in stock.")
       .setFooter({ text: FOOTER_TEXT })
       .setTimestamp();
 
