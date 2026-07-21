@@ -44,8 +44,8 @@ const SERVICES = [
   { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", stock: [] },
   { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", stock: [] },
   { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", stock: [] },
-  { id: 11, name: "HBO Max", emoji: "📺", category: "free", stock: [] },
-  { id: 12, name: "Deezer", emoji: "🎶", category: "free", stock: [] }
+  { id: 11, name: "Netflix", emoji: "🇳", category: "free", stock: [] },
+  { id: 12, name: "Netflix TV", emoji: "🇳", category: "free", stock: [] }
 ];
 
 const cooldowns = new Map();
@@ -162,11 +162,11 @@ client.on("messageCreate", async (message) => {
     }
 
     const service = SERVICES.find(
-      (s) => s.name.toLowerCase() === serviceName.toLowerCase()
+      (s) => s.name.toLowerCase() === serviceName.toLowerCase() && s.category === "booster"
     );
 
     if (!service) {
-      return message.reply(`❌ Service **${serviceName}** not found. Available: ${SERVICES.map(s => s.name).join(", ")}`);
+      return message.reply(`❌ Booster service **${serviceName}** not found. Available booster services: ${SERVICES.filter(s => s.category === "booster").map(s => s.name).join(", ")}`);
     }
 
     service.stock.push(account);
@@ -195,15 +195,15 @@ client.on("messageCreate", async (message) => {
     const account = args.slice(1).join(" ");
     
     if (!serviceName || !account) {
-      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Spotify user@gmail.com:pass123`);
+      return message.reply(`Usage: ${PREFIX}fstock <service> <account>\nExample: ${PREFIX}fstock Netflix https://netflix.com/?token=xxx`);
     }
 
     const service = SERVICES.find(
-      (s) => s.name.toLowerCase() === serviceName.toLowerCase()
+      (s) => s.name.toLowerCase() === serviceName.toLowerCase() && s.category === "free"
     );
 
     if (!service) {
-      return message.reply(`❌ Service **${serviceName}** not found. Available: ${SERVICES.map(s => s.name).join(", ")}`);
+      return message.reply(`❌ Free service **${serviceName}** not found. Available free services: ${SERVICES.filter(s => s.category === "free").map(s => s.name).join(", ")}`);
     }
 
     service.stock.push(account);
