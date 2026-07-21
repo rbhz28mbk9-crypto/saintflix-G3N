@@ -13,6 +13,11 @@ const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
 // ─────────────────────────────────────────
+// OWNER ID - Only this user can use .removecooldown
+// ─────────────────────────────────────────
+const OWNER_ID = "1399683999659593789";
+
+// ─────────────────────────────────────────
 // CHANNEL RESTRICTIONS
 // ─────────────────────────────────────────
 const CHANNEL_RESTRICTIONS = {
@@ -21,7 +26,8 @@ const CHANNEL_RESTRICTIONS = {
   "vouch": "1501668467407851612",1501651225710559477",
   "restock": "1501688358668075172",
   "bstock": "1501688358668075172",
-  "fstock": "1501688358668075172"
+  "fstock": "1501688358668075172",
+  "removecooldown": "1501688358668075172"
 };
 
 // ─────────────────────────────────────────
@@ -38,8 +44,8 @@ const SERVICES = [
   { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", stock: [] },
   { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", stock: [] },
   { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", stock: [] },
-  { id: 11, name: "Netflix", emoji: "📺", category: "free", stock: [] },
-  { id: 12, name: "Netflix Tv", emoji: "🎶", category: "free", stock: [] }
+  { id: 11, name: "Netflix", emoji: "🇳", category: "free", stock: [] },
+  { id: 12, name: "Netflix Tv", emoji: "🇳", category: "free", stock: [] }
 ];
 
 const cooldowns = new Map();
@@ -53,6 +59,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMembers,
   ],
 });
 
@@ -73,6 +80,62 @@ client.on("messageCreate", async (message) => {
       .setColor(0xe74c3c)
       .setTitle("❌ Wrong Channel")
       .setDescription(`Please use this command in <#${allowedChannel}>`)
+      .setFooter({ text: FOOTER_TEXT });
+    return message.reply({ embeds: [embed] });
+  }
+
+  // ─── removecooldown <user> ───
+  if (command === "removecooldown") {
+    // Check if the command user is the owner
+    if (message.author.id !== OWNER_ID) {
+      const embed = new EmbedBuilder()
+        .setColor(0xe74c3c)
+        .setTitle("❌ Permission Denied")
+        .setDescription("You do not have permission to use this command.")
+        .setFooter({ text: FOOTER_TEXT });
+      return message.reply({ embeds: [embed] });
+    }
+
+    const target = args[0];
+    if (!target) {
+      return message.reply(`Usage: ${PREFIX}removecooldown <@user or userID>\nExample: ${PREFIX}removecooldown @sainttt15`);
+    }
+
+    // Extract user ID from mention or use as-is
+    let userId = target;
+    const mentionMatch = target.match(/^<@!?(\d+)>$/);
+    if (mentionMatch) {
+      userId = mentionMatch[1];
+    }
+
+    // Check if user has any cooldowns
+    let removedCount = 0;
+    const keysToRemove = [];
+    for (const [key, value] of cooldowns) {
+      if (key.startsWith(`${userId}:`)) {
+        keysToRemove.push(key);
+        removedCount++;
+      }
+    }
+
+    // Remove all cooldowns for that user
+    for (const key of keysToRemove) {
+      cooldowns.delete(key);
+    }
+
+    if (removedCount === 0) {
+      const embed = new EmbedBuilder()
+        .setColor(0xf39c12)
+        .setTitle("ℹ️ No Cooldowns Found")
+        .setDescription(`<@${userId}> has no active cooldowns.`)
+        .setFooter({ text: FOOTER_TEXT });
+      return message.reply({ embeds: [embed] });
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0x2ecc71)
+      .setTitle("✅ Cooldown Removed")
+      .setDescription(`Removed **${removedCount}** cooldown(s) for <@${userId}>.`)
       .setFooter({ text: FOOTER_TEXT });
     return message.reply({ embeds: [embed] });
   }
@@ -157,7 +220,7 @@ client.on("messageCreate", async (message) => {
     const lastUsed = cooldowns.get(cdKey);
     if (lastUsed) {
       const elapsed = (Date.now() - lastUsed) / 1000 / 60;
-      const remaining = 60 - elapsed; // 60 minute cooldown
+      const remaining = 60 - elapsed;
       if (remaining > 0) {
         const mins = Math.floor(remaining);
         const secs = Math.round((remaining - mins) * 60);
@@ -260,6 +323,7 @@ client.on("messageCreate", async (message) => {
         { name: `${PREFIX}fstock <service> <account>`, value: "Add free account to stock", inline: false },
         { name: `${PREFIX}restock`, value: "View current stock counts", inline: false },
         { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch", inline: false },
+        { name: `${PREFIX}removecooldown <@user>`, value: "Remove a user's cooldown (Owner only)", inline: false },
         { name: `${PREFIX}help`, value: "Show this help message", inline: false }
       )
       .setFooter({ text: FOOTER_TEXT });
