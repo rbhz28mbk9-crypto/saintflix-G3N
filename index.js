@@ -1,5 +1,5 @@
 // ============================================================
-// AccountGen - Discord Account Generator Bot (WITH TIMEOUT)
+// AccountGen - Discord Account Generator Bot (FIXED INTENTS)
 // ============================================================
 // Requirements: npm install discord.js
 // ============================================================
@@ -12,14 +12,8 @@ const FOOTER_TEXT = "Powered by AccountGen Bot";
 const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
-// ─────────────────────────────────────────
-// OWNER ID
-// ─────────────────────────────────────────
 const OWNER_ID = "1399683999659593789";
 
-// ─────────────────────────────────────────
-// CHANNEL RESTRICTIONS
-// ─────────────────────────────────────────
 const CHANNEL_RESTRICTIONS = {
   "bgen": "1501651225710559477",
   "gen": "1501668467407851612",
@@ -49,8 +43,7 @@ const SERVICES = [
 ];
 
 const cooldowns = new Map();
-// ─── TIMEOUT SYSTEM ───
-const timedOutUsers = new Set(); // Stores user IDs that failed to vouch
+const timedOutUsers = new Set();
 
 const client = new Client({
   intents: [
@@ -58,7 +51,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
-    GatewayIntentBits.GuildMembers,
+    // ─── GuildMembers REMOVED to fix error ───
   ],
 });
 
@@ -90,7 +83,7 @@ client.on("messageCreate", async (message) => {
     }
   }
 
-  // ─── untimeout <user> ───
+  // ─── untimeout ───
   if (command === "untimeout") {
     if (message.author.id !== OWNER_ID) {
       const embed = new EmbedBuilder()
@@ -268,7 +261,6 @@ client.on("messageCreate", async (message) => {
 
   // ─── bgen / gen ───
   if (command === "bgen" || command === "gen") {
-    // ─── CHECK TIMEOUT ───
     if (timedOutUsers.has(message.author.id)) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
@@ -324,6 +316,10 @@ client.on("messageCreate", async (message) => {
     }
 
     cooldowns.set(cdKey, Date.now());
+    timedOutUsers.delete(message.author.id);
+    setTimeout(() => {
+      timedOutUsers.add(message.author.id);
+    }, VOUCH_TIMEOUT_MINUTES * 60 * 1000);
 
     try {
       const dmEmbed = new EmbedBuilder()
@@ -335,16 +331,9 @@ client.on("messageCreate", async (message) => {
       await message.author.send({ embeds: [dmEmbed] });
     } catch {
       service.stock.unshift(account);
+      timedOutUsers.delete(message.author.id);
       return message.reply("❌ Could not DM you. Please enable DMs from server members.");
     }
-
-    // ─── START VOUCH TIMER ───
-    // Remove any existing timeout for this user
-    timedOutUsers.delete(message.author.id);
-    // Set a 10-minute timeout
-    setTimeout(() => {
-      timedOutUsers.add(message.author.id);
-    }, VOUCH_TIMEOUT_MINUTES * 60 * 1000);
 
     const confirmEmbed = new EmbedBuilder()
       .setColor(0x2ecc71)
@@ -359,6 +348,32 @@ client.on("messageCreate", async (message) => {
     return message.reply({ embeds: [confirmEmbed] });
   }
 
+  // ─── restock ───
+  if (command === "restock") {
+    const boosterServices = SERVICES.filter((s) => s.category === "booster");
+    const freeServices = SERVICES.filter((s) => s.category === "free");
+
+    let description = "";
+    if (boosterServices.length > 0) {
+      description += "**🚀 Booster Services**\n";
+      description += boosterServices.map((s) => `• ${s.emoji} ${s.name}: **${s.stock.length}**`).join("\n");
+      description += "\n\n";
+    }
+    if (freeServices.length > 0) {
+      description += "**🆓 Free Services**\n";
+      description += freeServices.map((s) => `• ${s.emoji} ${s.name}: **${s.stock.length}**`).join("\n");
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle("📦 Account Stock")
+      .setDescription(description || "No accounts in stock.")
+      .setFooter({ text: FOOTER_TEXT })
+      .setTimestamp();
+
+    return message.reply({ embeds: [embed] });
+  }
+
   // ─── vouch ───
   if (command === "vouch") {
     const vouchText = args.join(" ");
@@ -366,10 +381,7 @@ client.on("messageCreate", async (message) => {
       return message.reply(`Usage: ${PREFIX}vouch <service> <your message>\nExample: ${PREFIX}vouch netflix great service!`);
     }
 
-    // ─── REMOVE TIMEOUT ON VOUCH ───
-    if (timedOutUsers.has(message.author.id)) {
-      timedOutUsers.delete(message.author.id);
-    }
+    timedOutUsers.delete(message.author.id);
 
     const words = vouchText.split(" ");
     const serviceName = words[0];
@@ -398,32 +410,6 @@ client.on("messageCreate", async (message) => {
     } else {
       return message.reply("❌ Vouch channel not found. Please contact the owner.");
     }
-  }
-
-  // ─── restock ───
-  if (command === "restock") {
-    const boosterServices = SERVICES.filter((s) => s.category === "booster");
-    const freeServices = SERVICES.filter((s) => s.category === "free");
-
-    let description = "";
-    if (boosterServices.length > 0) {
-      description += "**🚀 Booster Services**\n";
-      description += boosterServices.map((s) => `• ${s.emoji} ${s.name}: **${s.stock.length}**`).join("\n");
-      description += "\n\n";
-    }
-    if (freeServices.length > 0) {
-      description += "**🆓 Free Services**\n";
-      description += freeServices.map((s) => `• ${s.emoji} ${s.name}: **${s.stock.length}**`).join("\n");
-    }
-
-    const embed = new EmbedBuilder()
-      .setColor(0x5865f2)
-      .setTitle("📦 Account Stock")
-      .setDescription(description || "No accounts in stock.")
-      .setFooter({ text: FOOTER_TEXT })
-      .setTimestamp();
-
-    return message.reply({ embeds: [embed] });
   }
 
   // ─── help ───
