@@ -8,7 +8,7 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
 const PREFIX = ".";
 const BOT_NAME = "SaintFlix Gen";
-const FOOTER_TEXT = "Powered by AccountGen Bot";
+const FOOTER_TEXT = "Powered by SaintFlix Gen Bot";
 const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
