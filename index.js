@@ -1,5 +1,5 @@
 // ============================================================
-// AccountGen - Discord Account Generator Bot (FIXED - NO DUPLICATES)
+// AccountGen - Discord Account Generator Bot (DUPLICATE FIXED)
 // ============================================================
 // Requirements: npm install discord.js
 // ============================================================
