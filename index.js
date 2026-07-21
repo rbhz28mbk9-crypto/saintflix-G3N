@@ -13,7 +13,7 @@ const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
 // ─────────────────────────────────────────
-// OWNER ID - Only this user can use .removecooldown
+// OWNER ID - Only this user can use .bstock, .fstock, .removecooldown
 // ─────────────────────────────────────────
 const OWNER_ID = "1399683999659593789";
 
@@ -23,7 +23,7 @@ const OWNER_ID = "1399683999659593789";
 const CHANNEL_RESTRICTIONS = {
   "bgen": "1501651225710559477",
   "gen": "1501668467407851612",
-  "vouch": "1502123594829004953",
+  "vouch": ["1501668467407851612", "1501651225710559477"],
   "restock": "1501688358668075172",
   "bstock": "1501688358668075172",
   "fstock": "1501688358668075172",
@@ -74,13 +74,21 @@ client.on("messageCreate", async (message) => {
 
   // ─── CHANNEL RESTRICTION CHECK ───
   const allowedChannel = CHANNEL_RESTRICTIONS[command];
-  if (allowedChannel && message.channel.id !== allowedChannel) {
-    const embed = new EmbedBuilder()
-      .setColor(0xe74c3c)
-      .setTitle("❌ Wrong Channel")
-      .setDescription(`Please use this command in <#${allowedChannel}>`)
-      .setFooter({ text: FOOTER_TEXT });
-    return message.reply({ embeds: [embed] });
+  if (allowedChannel) {
+    let isAllowed = false;
+    if (Array.isArray(allowedChannel)) {
+      isAllowed = allowedChannel.includes(message.channel.id);
+    } else {
+      isAllowed = message.channel.id === allowedChannel;
+    }
+    if (!isAllowed) {
+      const embed = new EmbedBuilder()
+        .setColor(0xe74c3c)
+        .setTitle("❌ Wrong Channel")
+        .setDescription(`Please use this command in <#${allowedChannel}>`)
+        .setFooter({ text: FOOTER_TEXT });
+      return message.reply({ embeds: [embed] });
+    }
   }
 
   // ─── removecooldown <user> ───
@@ -137,6 +145,15 @@ client.on("messageCreate", async (message) => {
 
   // ─── bstock <service> <account> ───
   if (command === "bstock") {
+    if (message.author.id !== OWNER_ID) {
+      const embed = new EmbedBuilder()
+        .setColor(0xe74c3c)
+        .setTitle("❌ Permission Denied")
+        .setDescription("Only the bot owner can use this command.")
+        .setFooter({ text: FOOTER_TEXT });
+      return message.reply({ embeds: [embed] });
+    }
+
     const serviceName = args[0];
     const account = args.slice(1).join(" ");
     
@@ -165,6 +182,15 @@ client.on("messageCreate", async (message) => {
 
   // ─── fstock <service> <account> ───
   if (command === "fstock") {
+    if (message.author.id !== OWNER_ID) {
+      const embed = new EmbedBuilder()
+        .setColor(0xe74c3c)
+        .setTitle("❌ Permission Denied")
+        .setDescription("Only the bot owner can use this command.")
+        .setFooter({ text: FOOTER_TEXT });
+      return message.reply({ embeds: [embed] });
+    }
+
     const serviceName = args[0];
     const account = args.slice(1).join(" ");
     
@@ -314,8 +340,8 @@ client.on("messageCreate", async (message) => {
       .addFields(
         { name: `${PREFIX}bgen <service>`, value: "Generate a booster account", inline: false },
         { name: `${PREFIX}gen <service>`, value: "Alias for bgen", inline: false },
-        { name: `${PREFIX}bstock <service> <account>`, value: "Add booster account to stock", inline: false },
-        { name: `${PREFIX}fstock <service> <account>`, value: "Add free account to stock", inline: false },
+        { name: `${PREFIX}bstock <service> <account>`, value: "Add booster account to stock (Owner only)", inline: false },
+        { name: `${PREFIX}fstock <service> <account>`, value: "Add free account to stock (Owner only)", inline: false },
         { name: `${PREFIX}restock`, value: "View current stock counts", inline: false },
         { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch", inline: false },
         { name: `${PREFIX}removecooldown <@user>`, value: "Remove a user's cooldown (Owner only)", inline: false },
