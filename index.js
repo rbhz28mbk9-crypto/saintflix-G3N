@@ -1,5 +1,5 @@
 // ============================================================
-// AccountGen - Discord Account Generator Bot (DUPLICATE FIXED)
+// AccountGen - Discord Account Generator Bot (FINAL FIX)
 // ============================================================
 // Requirements: npm install discord.js
 // ============================================================
@@ -44,7 +44,10 @@ const SERVICES = [
 
 const cooldowns = new Map();
 const timedOutUsers = new Set();
-const processedMessages = new Set(); // ─── DEDUPLICATION ───
+
+// ─── PREVENT DUPLICATE INSTANCES ───
+let isReady = false;
+let isShuttingDown = false;
 
 const client = new Client({
   intents: [
@@ -56,13 +59,25 @@ const client = new Client({
 });
 
 client.once("ready", () => {
+  if (isReady) {
+    console.log("⚠️ Duplicate instance detected - shutting down");
+    if (!isShuttingDown) {
+      isShuttingDown = true;
+      process.exit(0);
+    }
+    return;
+  }
+  isReady = true;
   console.log(`✅ ${client.user.tag} is online!`);
 });
+
+// ─── PROCESS MESSAGES ───
+const processedMessages = new Set();
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
 
-  // ─── DEDUPLICATION GUARD ───
+  // ─── DEDUPLICATION ───
   if (processedMessages.has(message.id)) return;
   processedMessages.add(message.id);
   setTimeout(() => processedMessages.delete(message.id), 5000);
