@@ -13,29 +13,30 @@ const VOUCH_TIMEOUT_MINUTES = 10;
 const VOUCH_MESSAGE = "Leave a vouch with .vouch <service> <message> + screenshot!";
 
 // ─────────────────────────────────────────
-// CHANNEL RESTRICTIONS - ADD THIS BLOCK
+// CHANNEL RESTRICTIONS
 // ─────────────────────────────────────────
 const CHANNEL_RESTRICTIONS = {
   "bgen": "1501651225710559477",
   "gen": "1501668467407851612",
   "vouch": "1502123594829004953",
-  "restock": "1501688358668075172"
+  "restock": "1501688358668075172",
+  "bstock": "1501688358668075172"  // bstock works in restock channel
 };
 
 // ─────────────────────────────────────────
 // SERVICES & STOCK
 // ─────────────────────────────────────────
 const SERVICES = [
-  { id: 1, name: "Netflix", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: ["user1@gmail.com:Netflix123!","user2@yahoo.com:Pass456#","user3@hotmail.com:Secure789$","user4@gmail.com:Netflix321!","user5@proton.me:NflxPass111"] },
-  { id: 2, name: "Netflix TV", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: ["tvuser1@gmail.com:NetflixTV1!","tvuser2@yahoo.com:TVPass234#","tvuser3@hotmail.com:NflxTV567$","tvuser4@gmail.com:TvAcc890!"] },
+  { id: 1, name: "Netflix", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: [] },
+  { id: 2, name: "Netflix TV", emoji: "🇳", category: "booster", cooldownMinutes: 60, stock: [] },
   { id: 3, name: "Crunchyroll", emoji: "🍊", category: "booster", cooldownMinutes: 60, stock: [] },
   { id: 4, name: "Prime Video", emoji: "🎬", category: "booster", cooldownMinutes: 60, stock: [] },
   { id: 5, name: "Disney+", emoji: "🏰", category: "booster", cooldownMinutes: 60, stock: [] },
-  { id: 6, name: "Spotify", emoji: "🎵", category: "booster", cooldownMinutes: 60, stock: ["spot1@gmail.com:Spotify123!","spot2@yahoo.com:SpPass456#","spot3@hotmail.com:Spot789$","spot4@gmail.com:SpotifyAcc1","spot5@proton.me:SpotAcc2","spot6@gmail.com:SpotifyPass3","spot7@yahoo.com:SpotifyPass4","spot8@hotmail.com:SpotifyPass5","spot9@gmail.com:SpotifyPass6"] },
-  { id: 7, name: "Steam", emoji: "🎮", category: "booster", cooldownMinutes: 120, stock: ["steamuser1@gmail.com:SteamPass1!","steamuser2@gmail.com:SteamPass2!","steamuser3@gmail.com:SteamPass3!","steamuser4@gmail.com:SteamPass4!","steamuser5@gmail.com:SteamPass5!","steamuser6@gmail.com:SteamPass6!","steamuser7@gmail.com:SteamPass7!","steamuser8@gmail.com:SteamPass8!","steamuser9@gmail.com:SteamPass9!","steamuser10@gmail.com:SteamPass10!","steamuser11@gmail.com:SteamPass11!","steamuser12@gmail.com:SteamPass12!","steamuser13@gmail.com:SteamPass13!","steamuser14@gmail.com:SteamPass14!","steamuser15@gmail.com:SteamPass15!","steamuser16@gmail.com:SteamPass16!","steamuser17@gmail.com:SteamPass17!","steamuser18@gmail.com:SteamPass18!","steamuser19@gmail.com:SteamPass19!","steamuser20@gmail.com:SteamPass20!","steamuser21@gmail.com:SteamPass21!","steamuser22@gmail.com:SteamPass22!","steamuser23@gmail.com:SteamPass23!","steamuser24@gmail.com:SteamPass24!","steamuser25@gmail.com:SteamPass25!","steamuser26@gmail.com:SteamPass26!","steamuser27@gmail.com:SteamPass27!","steamuser28@gmail.com:SteamPass28!"] },
-  { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", cooldownMinutes: 60, stock: ["chatgpt1@gmail.com:ChatGPT123!","chatgpt2@yahoo.com:ChatPass456#","chatgpt3@hotmail.com:GPTAcc789$","chatgpt4@gmail.com:ChatGPT321!","chatgpt5@proton.me:GPTPass111"] },
-  { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", cooldownMinutes: 60, stock: ["xbox1@gmail.com:XboxPass1!","xbox2@gmail.com:XboxPass2!","xbox3@gmail.com:XboxPass3!","xbox4@gmail.com:XboxPass4!","xbox5@gmail.com:XboxPass5!","xbox6@gmail.com:XboxPass6!","xbox7@gmail.com:XboxPass7!"] },
-  { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", cooldownMinutes: 60, stock: ["paramount1@gmail.com:ParamPass1!","paramount2@gmail.com:ParamPass2!","paramount3@gmail.com:ParamPass3!","paramount4@gmail.com:ParamPass4!","paramount5@gmail.com:ParamPass5!","paramount6@gmail.com:ParamPass6!","paramount7@gmail.com:ParamPass7!"] },
+  { id: 6, name: "Spotify", emoji: "🎵", category: "booster", cooldownMinutes: 60, stock: [] },
+  { id: 7, name: "Steam", emoji: "🎮", category: "booster", cooldownMinutes: 120, stock: [] },
+  { id: 8, name: "ChatGPT", emoji: "🤖", category: "booster", cooldownMinutes: 60, stock: [] },
+  { id: 9, name: "Xbox", emoji: "🕹️", category: "booster", cooldownMinutes: 60, stock: [] },
+  { id: 10, name: "Paramount+", emoji: "⭐", category: "booster", cooldownMinutes: 60, stock: [] },
   { id: 11, name: "HBO Max", emoji: "📺", category: "free", cooldownMinutes: 30, stock: [] },
   { id: 12, name: "Deezer", emoji: "🎶", category: "free", cooldownMinutes: 30, stock: [] }
 ];
@@ -72,6 +73,35 @@ client.on("messageCreate", async (message) => {
       .setTitle("❌ Wrong Channel")
       .setDescription(`Please use this command in <#${allowedChannel}>`)
       .setFooter({ text: FOOTER_TEXT });
+    return message.reply({ embeds: [embed] });
+  }
+
+  // ─── bstock <service> <email:pass> ───
+  if (command === "bstock") {
+    const serviceName = args[0];
+    const account = args.slice(1).join(" ");
+    
+    if (!serviceName || !account) {
+      return message.reply(`Usage: ${PREFIX}bstock <service> <email:password>\nExample: ${PREFIX}bstock Netflix user@gmail.com:pass123`);
+    }
+
+    const service = SERVICES.find(
+      (s) => s.name.toLowerCase() === serviceName.toLowerCase()
+    );
+
+    if (!service) {
+      return message.reply(`❌ Service **${serviceName}** not found. Available: ${SERVICES.map(s => s.name).join(", ")}`);
+    }
+
+    // Add account to stock
+    service.stock.push(account);
+    
+    const embed = new EmbedBuilder()
+      .setColor(0x2ecc71)
+      .setTitle("✅ Account Added to Stock")
+      .setDescription(`Added **${service.emoji} ${service.name}** account to stock.\nTotal: **${service.stock.length}** accounts`)
+      .setFooter({ text: FOOTER_TEXT });
+    
     return message.reply({ embeds: [embed] });
   }
 
@@ -112,12 +142,13 @@ client.on("messageCreate", async (message) => {
       }
     }
 
+    // Get account from stock (removes it so no one else gets it)
     const account = service.stock.shift();
     if (!account) {
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
         .setTitle("❌ Out of Stock")
-        .setDescription(`**${service.emoji} ${service.name}** is currently out of stock. Check back later!`)
+        .setDescription(`**${service.emoji} ${service.name}** is currently out of stock. Use ${PREFIX}bstock to add more!`)
         .setFooter({ text: FOOTER_TEXT });
       return message.reply({ embeds: [embed] });
     }
@@ -133,6 +164,8 @@ client.on("messageCreate", async (message) => {
         .setTimestamp();
       await message.author.send({ embeds: [dmEmbed] });
     } catch {
+      // If DM fails, put account back in stock
+      service.stock.unshift(account);
       return message.reply("❌ Could not DM you. Please enable DMs from server members.");
     }
 
@@ -168,7 +201,7 @@ client.on("messageCreate", async (message) => {
     const embed = new EmbedBuilder()
       .setColor(0x5865f2)
       .setTitle("📦 Account Stock")
-      .setDescription(description || "No services configured.")
+      .setDescription(description || "No services configured. Use .bstock to add accounts.")
       .setFooter({ text: FOOTER_TEXT })
       .setTimestamp();
 
@@ -197,6 +230,7 @@ client.on("messageCreate", async (message) => {
       .addFields(
         { name: `${PREFIX}bgen <service>`, value: "Generate an account for a service", inline: false },
         { name: `${PREFIX}gen <service>`, value: "Alias for bgen", inline: false },
+        { name: `${PREFIX}bstock <service> <email:pass>`, value: "Add an account to stock (removes when generated)", inline: false },
         { name: `${PREFIX}restock`, value: "View current stock counts", inline: false },
         { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch after receiving an account", inline: false },
         { name: `${PREFIX}help`, value: "Show this help message", inline: false }
