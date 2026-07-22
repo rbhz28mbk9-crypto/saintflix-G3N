@@ -77,7 +77,6 @@ const processedMessages = new Set();
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.content.startsWith(PREFIX)) return;
 
-  // ─── DEDUPLICATION ───
   if (processedMessages.has(message.id)) return;
   processedMessages.add(message.id);
   setTimeout(() => processedMessages.delete(message.id), 5000);
@@ -361,7 +360,7 @@ client.on("messageCreate", async (message) => {
       .setDescription(
         `<@${message.author.id}> Your **${service.emoji} ${service.name}** account has been sent to your DMs!\n\n` +
         `📝 **NOTES** ${VOUCH_MESSAGE}\n` +
-        `⚠️ **IMPORTANT:** You have **${VOUCH_TIMEOUT_MINUTES} minutes** to vouch or you'll be **timed out**!`
+        `⚠️ **IMPORTANT:** You have **${VOUCH_TIMEOUT_MINUTES} minutes** to vouch or youll be **timed out**!`
       )
       .setFooter({ text: FOOTER_TEXT });
 
@@ -444,13 +443,23 @@ client.on("messageCreate", async (message) => {
         { name: `${PREFIX}fstock <service> <account>`, value: "Add free account to stock (Owner only)", inline: false },
         { name: `${PREFIX}restock`, value: "View current stock counts", inline: false },
         { name: `${PREFIX}vouch <service> <msg>`, value: "Submit a vouch (removes timeout)", inline: false },
-        { name: `${PREFIX}removecooldown <@user>`, value: "Remove a user's cooldown (Owner only)", inline: false },
-        { name: `${PREFIX}untimeout <@user>`, value: "Remove a user's vouch timeout (Owner only)", inline: false },
+        { name: `${PREFIX}removecooldown <@user>`, value: "Remove a users cooldown (Owner only)", inline: false },
+        { name: `${PREFIX}untimeout <@user>`, value: "Remove a users vouch timeout (Owner only)", inline: false },
         { name: `${PREFIX}help`, value: "Show this help message", inline: false }
       )
       .setFooter({ text: FOOTER_TEXT });
     return message.reply({ embeds: [embed] });
   }
+});
+
+// ─── ADD A SIMPLE WEB SERVER TO KEEP RENDER HAPPY ───
+const http = require('http');
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is online!');
+});
+server.listen(3000, () => {
+  console.log('✅ Web server running on port 3000');
 });
 
 const token = process.env.BOT_TOKEN;
